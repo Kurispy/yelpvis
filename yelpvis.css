@@ -1,0 +1,65 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none
+}
+
+html {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    overflow: hidden
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+.display {
+    
+}
+
+.displayDiv {
+    background: rgb(229, 227, 223);
+}
+
+.dataSwitch {
+    fill-opacity: 0;
+    cursor: pointer;
+}
+
+.dataSwitchBG {
+    stroke: black;
+    stroke-width: 1
+}
+
+.dataSwitchText {
+    text-anchor: middle
+}
+
+.infoHeader {
+    font-size: 14pt;
+    font-weight: bold
+}
+
+.infoText {
+    font-size: 8pt;}
+
+.axis {
+    font-size: 6pt
+}
+
+.timeAxis {
+    cursor: pointer;
+    font-size: 5pt
+}
+
+.point {
+    
+}
