@@ -138,6 +138,15 @@ function initTimescaleControl() {
         .orient("left")
         .tickSize(0);
 
+    var brush = d3.svg.brush()
+            .y(yScale)
+            .on("brush", function() {
+                console.log(brush.extent());
+                reviewByDate.filterRange(brush.extent());
+            });
+    
+    
+
     timescaleController.append("g")
         .attr("class", "timeAxis")
         .call(yAxis);
@@ -156,6 +165,12 @@ function initTimescaleControl() {
         .attr("y", function(d, i) {
             return (height / reviewsPerDate.length) * i;
         })
-        .attr("fill", "steelblue")
-        .attr("cursor", "pointer");
+        .attr("fill", "steelblue");
+
+    var gBrush = timescaleController.append("g")
+        .attr("class", "brush")
+        .call(brush);
+
+    gBrush.selectAll("rect")
+        .attr("width", width);
 }

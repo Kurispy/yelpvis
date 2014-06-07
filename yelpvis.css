@@ -63,3 +63,8 @@ body {
 .point {
     
 }
+
+.brush {
+    stroke: #fff;
+    fill-opacity: .125;
+}
