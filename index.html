@@ -1,16 +1,34 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <link href="yelpvis.css" rel="stylesheet">
-        <title>Yelp Visualization</title>
-        <script src="lib/d3.js" charset="utf-8"></script>
-        <script src="lib/three.js" charset="utf-8"></script>
-        <script src="lib/crossfilter.js" charset="utf-8"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7RfNm_wQ1_-OuhlwhwskxEonWfH3cI2M&sensor=false"></script>
-    </head>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Yelp Dataset</title>
 
-    <body>
-        <script src="yelpvis.js"></script>
-    </body>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- Scripts -->
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script>
+    <script src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/src/markerclusterer.js"></script>
+    <script src="js/google-map.js"></script>
+  </body>
+</html>
 </html>
