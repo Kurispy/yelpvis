@@ -45,6 +45,41 @@ var secondaryControlDisplay = d3.select("body").append("div")
         "border-top": "2px solid black",
         "border-left": "2px solid black"
     });
+    
+var detailViewDisplay = d3.select("body").append("div")
+    .attr("class", "displayDiv")
+    .style({
+        position: "absolute",
+        left: "0px",
+        top: "67%",
+        width: "50%",
+        height: "33%",
+        "border-top": "2px solid black"
+    })
+    .append("svg")
+    .attr({
+        class: "display",
+        width: "100%",
+        height: "100%",
+        viewBox: "0 0 480 195"
+    });
+    
+var calHeatMapDisplay = d3.select("body").append("div")
+    .attr("class", "displayDiv")
+    .style({
+        position:"absolute",
+        left: "50%",
+        top: "67%",
+        width: "50%",
+        height: "33%",
+        "border-top": "2px solid black"
+    });
+    
+var calHeatMap = calHeatMapDisplay.append("div")
+    .attr("id", "cal-heatmap");
+
+var button = calHeatMap.append("button")
+    .attr("id", "business-name");
 
 d3.json("data/user.json", function(data) {
     userData = data;
@@ -87,6 +122,7 @@ function processData() {
     initMapDisplay();
     initTimescaleControl();
     initControlButtons();
+    updateDetailViewDisplay();
 }
 
 function initMapDisplay() {
@@ -154,7 +190,9 @@ function initTimescaleControl() {
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
             
+            updateDetailViewDisplay();
             updateReviewHeatmap();
+            
         });
         
     timescaleController.append("g")
@@ -270,6 +308,73 @@ function initControlButtons() {
         
     businessDiv.append("text")
         .text("Reviews");
+}
+
+function updateDetailViewDisplay() {
+    var reviewsPerDate = reviewDates.all();
+    
+    detailViewDisplay.selectAll("*").remove();
+    
+    // Scales
+    var xScale = d3.time.scale()
+        .domain([d3.min(reviewsPerDate, function(d) { return d.key; }),
+            d3.max(reviewsPerDate, function(d) { return d.key; })])
+        .range([0, 400]);
+
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom")
+        .tickSize(1)
+        .ticks(5);
+    
+    var yScale = d3.scale.linear()
+        .domain([0, d3.max(reviewsPerDate, function(d) { return d.value; })])
+        .range([120, 0]);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickSize(1)
+        .ticks(5);
+
+    detailViewDisplay.append("text")
+        .attr({
+            class: "infoHeader",
+            x: 240,
+            y: 25,
+            "text-anchor": "middle"
+        })
+        .text("Reviews Per Day");
+
+    detailViewDisplay.append("g")
+        .attr("transform", "translate(49, 170)")
+        .attr("class", "axis")
+        .call(xAxis);
+
+    detailViewDisplay.append("g")
+        .attr("transform", "translate(49, 50)")
+        .attr("class", "axis")
+        .call(yAxis);
+
+    var bars = detailViewDisplay.append("g")
+            .attr("transform", "translate(50, 50)");
+
+    // Enter
+    bars.selectAll("rect")
+        .data(reviewsPerDate)
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i) {
+            return i * (400 / reviewsPerDate.length);
+        })
+        .attr("y", function(d) {
+            return yScale(d.value);
+        })
+        .attr("width", (400 / reviewsPerDate.length))
+        .attr("height", function(d) {
+            return 120 - yScale(d.value);
+        })
+        .attr("fill", "steelblue");
 }
 
 // Find the index of the element in array of which the attr equal value
