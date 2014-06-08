@@ -1,4 +1,4 @@
-var userData, businessData, reviewData, remaining = 3;
+var businessData, reviewData, remaining = 2;
 var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
 var business, businessByLocation, businessLocations;
 var map, reviewHeatmap, businessHeatmap;
@@ -72,20 +72,18 @@ var calHeatMapDisplay = d3.select("body").append("div")
         top: "67%",
         width: "50%",
         height: "33%",
-        "border-top": "2px solid black"
+        "text-align": "center",
+        "border-top": "2px solid black",
+        "border-left": "2px solid black"
     });
     
 var calHeatMap = calHeatMapDisplay.append("div")
-    .attr("id", "cal-heatmap");
+    .attr({
+        id: "cal-heatmap"
+    });
 
 var button = calHeatMap.append("button")
     .attr("id", "business-name");
-
-d3.json("data/user.json", function(data) {
-    userData = data;
-    if(!--remaining)
-        processData();
-});
 
 d3.json("data/business.json", function(data) {
     businessData = data;

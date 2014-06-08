@@ -32,7 +32,7 @@ $.getJSON("data/checkin.json", function(json){
     $("#business-name").on("click", function(){
         click+=1;
         document.getElementById("business-name").innerHTML = json[click]["business_id"];
-        cal.update(json[click]["checkin_time"])
+        cal.update(json[click]["checkin_time"]);
     });
     
     document.getElementById("weekday0").innerHTML = "Sunday";
