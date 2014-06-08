@@ -120,7 +120,7 @@ function processData() {
     initMapDisplay();
     initTimescaleControl();
     initControlButtons();
-    updateDetailViewDisplay();
+    updateDetailViewDisplay(null);
 }
 
 function initMapDisplay() {
@@ -188,7 +188,7 @@ function initTimescaleControl() {
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
             
-            updateDetailViewDisplay();
+            updateDetailViewDisplay(brush.extent());
             updateReviewHeatmap();
             
         });
@@ -308,8 +308,15 @@ function initControlButtons() {
         .text("Reviews");
 }
 
-function updateDetailViewDisplay() {
-    var reviewsPerDate = reviewDates.all();
+function updateDetailViewDisplay(extent) {
+    var reviewsPerDate;
+    if(extent === null)
+        reviewsPerDate = reviewDates.all();
+    else {
+        reviewsPerDate = reviewDates.all().filter(function(d, i) {
+            return d.key >= extent[0].getTime() && d.key <= extent[1].getTime();
+        });
+    }
     
     detailViewDisplay.selectAll("*").remove();
     
