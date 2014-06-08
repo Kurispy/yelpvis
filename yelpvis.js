@@ -1,7 +1,7 @@
 var userData, businessData, reviewData, remaining = 3;
 var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
 var business, businessById;
-var reviewHeatmap;
+var map, reviewHeatmap, businessHeatmap;
 
 var mapDisplay = d3.select("body").append("div")
     .attr({
@@ -34,7 +34,7 @@ var controlDisplay = d3.select("body").append("div")
         viewBox: "0 0 260 260"
     });
 
-var businessInfoDisplay = d3.select("body").append("div")
+var secondaryControlDisplay = d3.select("body").append("div")
     .attr("class", "displayDiv")
     .style({
         position: "absolute",
@@ -44,13 +44,6 @@ var businessInfoDisplay = d3.select("body").append("div")
         height: "18.75%",
         "border-top": "2px solid black",
         "border-left": "2px solid black"
-    })
-    .append("svg")
-    .attr({
-        class: "display",
-        width: "100%",
-        height: "100%",
-        viewBox: "0 0 260 105"
     });
 
 d3.json("data/user.json", function(data) {
@@ -92,6 +85,7 @@ function processData() {
     
     initMapDisplay();
     initTimescaleControl();
+    initControlButtons();
 }
 
 function initMapDisplay() {
@@ -99,7 +93,7 @@ function initMapDisplay() {
       center: new google.maps.LatLng(33.451162, -112.061603),
       zoom: 10
     };
-    var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
     var businessLocations = new google.maps.MVCArray(businessData.map(function(d, i) {
         // We can set up markers at the same time
@@ -112,7 +106,7 @@ function initMapDisplay() {
         return new google.maps.LatLng(d.latitude, d.longitude);
     }));
     
-    var businessHeatmap = new google.maps.visualization.HeatmapLayer({
+    businessHeatmap = new google.maps.visualization.HeatmapLayer({
         data: businessLocations,
         map: null,
         radius: 15
@@ -136,18 +130,6 @@ function setListener(object, d) {
     google.maps.event.addListener(object, 'click', function(event) {
         updateBusinessInfo(d);
     });
-}
-
-function updateBusinessInfo(d) {
-    businessInfoDisplay.selectAll("*").remove();
-    
-    businessInfoDisplay.append("text")
-        .attr({
-            class: "infoHeader",
-            x: 0,
-            y: 20
-        })
-        .text(d.name);
 }
 
 function initTimescaleControl() {
@@ -211,6 +193,22 @@ function initTimescaleControl() {
         .attr("width", width);
 }
 
+function initControlButtons() {
+    secondaryControlDisplay.append("button")
+        .attr({
+            class: "button",
+            onclick: "toggleReviewHeatmap()"
+        })
+        .text("Toggle Review Heatmap");
+
+    secondaryControlDisplay.append("button")
+        .attr({
+            class: "button",
+            onclick: "toggleBusinessHeatmap()"
+        })
+        .text("Toggle Business Heatmap");
+}
+
 // Find the index of the element in array of which the attr equal value
 // Array should be sorted in ascending order
 function getIndex(array, attr, value) {
@@ -228,4 +226,12 @@ function getIndex(array, attr, value) {
         return i;
     }
     return null;
+}
+
+function toggleReviewHeatmap() {
+    reviewHeatmap.setMap(reviewHeatmap.getMap() ? null : map);
+}
+
+function toggleBusinessHeatmap() {
+    businessHeatmap.setMap(businessHeatmap.getMap() ? null : map);
 }

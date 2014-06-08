@@ -1,7 +1,5 @@
 * {
-    margin: 0;
-    padding: 0;
-    border: 0;
+    
     font-family: Arial, Helvetica, sans-serif;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -9,16 +7,17 @@
 }
 
 html {
+    margin: 0;
+    padding: 0;
+    border: 0;
     height: 100%;
     width: 100%;
-    text-align: center;
     overflow: hidden
 }
 
 body {
     height: 100%;
     width: 100%;
-    text-align: center;
 }
 
 .display {
@@ -26,7 +25,7 @@ body {
 }
 
 .displayDiv {
-    background: rgb(229, 227, 223);
+    background: rgb(236, 236, 236);
 }
 
 .dataSwitch {
@@ -67,4 +66,7 @@ body {
 .brush {
     stroke: #fff;
     fill-opacity: .125;
+}
+
+.button {
 }
