@@ -1,6 +1,8 @@
 var userData, businessData, reviewData, remaining = 3;
-var review, reviews, reviewByDate, reviewDates, reviewByBusiness;
+var review, reviews, reviewByDate, reviewDates;
+var business, businessById;
 var reviewLocations;
+var reviewHeatmap;
 
 var mapDisplay = d3.select("body").append("div")
     .attr({
@@ -79,7 +81,9 @@ function processData() {
         return (new Date(ymd[0], ymd[1] - 1, ymd[2])).getTime();
     });
     reviewDates = reviewByDate.group();
-    reviewByBusiness = review.dimension(function(d) {
+    
+    business = crossfilter(businessData);
+    businessById = business.dimension(function(d) {
         return d.business_id;
     });
     
@@ -107,6 +111,20 @@ function initMapDisplay() {
     
     var businessHeatmap = new google.maps.visualization.HeatmapLayer({
         data: businessLocations,
+        map: null,
+        radius: 15
+    });
+    
+    var businesses = businessById.bottom(Infinity);
+    
+    reviewLocations = new google.maps.MVCArray(reviewByDate.top(Infinity).map(function(d, i) {
+        // Get Lat/Long for each id
+        var b = businesses[getIndex(businesses, "business_id", d.business_id)];
+        return new google.maps.LatLng(b.latitude, b.longitude);
+    }));
+    
+    reviewHeatmap = new google.maps.visualization.HeatmapLayer({
+        data: reviewLocations,
         map: map,
         radius: 15
     });
@@ -156,6 +174,14 @@ function initTimescaleControl() {
         .y(yScale)
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
+            
+            var businesses = businessById.bottom(Infinity);
+            
+            reviewHeatmap.setData(new google.maps.MVCArray(reviewByDate.top(Infinity).map(function(d, i) {
+                // Get Lat/Long for each id
+                var b = businesses[getIndex(businesses, "business_id", d.business_id)];
+                return new google.maps.LatLng(b.latitude, b.longitude);
+            })));
         });
         
     timescaleController.append("g")
@@ -184,4 +210,23 @@ function initTimescaleControl() {
 
     gBrush.selectAll("rect")
         .attr("width", width);
+}
+
+// Find the index of the element in array of which the attr equal value
+// Array should be sorted in ascending order
+function getIndex(array, attr, value) {
+    var low = 0, high = array.length - 1, i;
+    while (low <= high) {
+        i = Math.floor((low + high) / 2);
+        if (array[i][attr] < value) {
+            low = i + 1;
+            continue;
+        }
+        if (array[i][attr] > value) {
+            high = i - 1;
+            continue; 
+        }
+        return i;
+    }
+    return null;
 }
