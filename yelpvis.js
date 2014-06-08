@@ -1,5 +1,6 @@
 var userData, businessData, reviewData, remaining = 3;
-var review, reviews, reviewByDate, reviewDates;
+var review, reviews, reviewByDate, reviewDates, reviewByBusiness;
+var reviewLocations;
 
 var mapDisplay = d3.select("body").append("div")
     .attr({
@@ -78,6 +79,10 @@ function processData() {
         return (new Date(ymd[0], ymd[1] - 1, ymd[2])).getTime();
     });
     reviewDates = reviewByDate.group();
+    reviewByBusiness = review.dimension(function(d) {
+        return d.business_id;
+    });
+    
     initMapDisplay();
     initTimescaleControl();
 }
@@ -89,12 +94,21 @@ function initMapDisplay() {
     };
     var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
-    businessData.forEach(function(d, i){
+    var businessLocations = new google.maps.MVCArray(businessData.map(function(d, i) {
+        // We can set up markers at the same time
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(d.latitude, d.longitude),
-            map: map
+            map: null
         });
         setListener(marker, d);
+        
+        return new google.maps.LatLng(d.latitude, d.longitude);
+    }));
+    
+    var businessHeatmap = new google.maps.visualization.HeatmapLayer({
+        data: businessLocations,
+        map: map,
+        radius: 15
     });
 }
 
@@ -139,14 +153,11 @@ function initTimescaleControl() {
         .tickSize(0);
 
     var brush = d3.svg.brush()
-            .y(yScale)
-            .on("brush", function() {
-                console.log(brush.extent());
-                reviewByDate.filterRange(brush.extent());
-            });
-    
-    
-
+        .y(yScale)
+        .on("brush", function() {
+            reviewByDate.filterRange(brush.extent());
+        });
+        
     timescaleController.append("g")
         .attr("class", "timeAxis")
         .call(yAxis);
