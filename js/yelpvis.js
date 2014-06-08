@@ -46,6 +46,24 @@ var secondaryControlDisplay = d3.select("body").append("div")
         "border-left": "2px solid black"
     });
 
+var calHeatMapDisplay = d3.select("body").append("div")
+    .attr("class", "displayDiv")
+    .style({
+        position:"absolute",
+        left: "0px",
+        top: "67%",
+        width: "50%",
+        height: "33%",
+        "border-top": "2px solid black"
+    });
+
+var calHeatMap = calHeatMapDisplay.append("div")
+    .attr("id", "cal-heatmap");
+
+var button = calHeatMap.append("button")
+    .attr("id", "business-name")
+
+
 d3.json("data/user.json", function(data) {
     userData = data;
     if(!--remaining)
