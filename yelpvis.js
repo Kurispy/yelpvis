@@ -1,7 +1,6 @@
 var userData, businessData, reviewData, remaining = 3;
-var review, reviews, reviewByDate, reviewDates;
+var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
 var business, businessById;
-var reviewLocations;
 var reviewHeatmap;
 
 var mapDisplay = d3.select("body").append("div")
@@ -81,6 +80,10 @@ function processData() {
         return (new Date(ymd[0], ymd[1] - 1, ymd[2])).getTime();
     });
     reviewDates = reviewByDate.group();
+    reviewByLocation = review.dimension(function(d) {
+        return d.latitude + ' ' + d.longitude;
+    });
+    reviewLocations = reviewByLocation.group();
     
     business = crossfilter(businessData);
     businessById = business.dimension(function(d) {
@@ -115,16 +118,14 @@ function initMapDisplay() {
         radius: 15
     });
     
-    var businesses = businessById.bottom(Infinity);
-    
-    reviewLocations = new google.maps.MVCArray(reviewByDate.top(Infinity).map(function(d, i) {
-        // Get Lat/Long for each id
-        var b = businesses[getIndex(businesses, "business_id", d.business_id)];
-        return new google.maps.LatLng(b.latitude, b.longitude);
+    reducedLocations = new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
+        var ltlg = d.key.split(' ');
+        var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
+        return {location: latlng, weight: d.value};
     }));
     
     reviewHeatmap = new google.maps.visualization.HeatmapLayer({
-        data: reviewLocations,
+        data: reducedLocations,
         map: map,
         radius: 15
     });
@@ -175,12 +176,10 @@ function initTimescaleControl() {
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
             
-            var businesses = businessById.bottom(Infinity);
-            
-            reviewHeatmap.setData(new google.maps.MVCArray(reviewByDate.top(Infinity).map(function(d, i) {
-                // Get Lat/Long for each id
-                var b = businesses[getIndex(businesses, "business_id", d.business_id)];
-                return new google.maps.LatLng(b.latitude, b.longitude);
+            reviewHeatmap.setData(new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
+                var ltlg = d.key.split(' ');
+                var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
+                return {location: latlng, weight: d.value};
             })));
         });
         
