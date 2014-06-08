@@ -26,7 +26,7 @@ $.getJSON("data/checkin.json", function(json){
             width: 110
         },
         legend: [1, 2, 3, 4, 5, 10],
-        legendColors: ["#ecf5e2", "#232181"]
+        legendColors: ["#ffffff", "#232181"]
     });
 
     $("#business-name").on("click", function(){
