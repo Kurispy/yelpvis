@@ -1,6 +1,6 @@
 var userData, businessData, reviewData, remaining = 3;
 var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
-var business, businessById;
+var business, businessByLocation, businessLocations;
 var map, reviewHeatmap, businessHeatmap;
 
 var mapDisplay = d3.select("body").append("div")
@@ -79,9 +79,10 @@ function processData() {
     reviewLocations = reviewByLocation.group();
     
     business = crossfilter(businessData);
-    businessById = business.dimension(function(d) {
-        return d.business_id;
+    businessByLocation = business.dimension(function(d) {
+        return d.latitude + ' ' + d.longitude;
     });
+    businessLocations = businessByLocation.group();
     
     initMapDisplay();
     initTimescaleControl();
@@ -95,32 +96,27 @@ function initMapDisplay() {
     };
     map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
-    var businessLocations = new google.maps.MVCArray(businessData.map(function(d, i) {
-        // We can set up markers at the same time
-        var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(d.latitude, d.longitude),
-            map: null
-        });
-        setListener(marker, d);
-        
-        return new google.maps.LatLng(d.latitude, d.longitude);
+    var reducedBusinessLocations = new google.maps.MVCArray(businessLocations.all().map(function(d, i) {
+        var ltlg = d.key.split(' ');
+        var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
+        return {location: latlng, weight: d.value};
     }));
     
     businessHeatmap = new google.maps.visualization.HeatmapLayer({
-        data: businessLocations,
+        data: reducedBusinessLocations,
         map: null,
         radius: 15
     });
     
-    reducedLocations = new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
+    var reducedReviewLocations = new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
         var ltlg = d.key.split(' ');
         var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
         return {location: latlng, weight: d.value};
     }));
     
     reviewHeatmap = new google.maps.visualization.HeatmapLayer({
-        data: reducedLocations,
-        map: map,
+        data: reducedReviewLocations,
+        map: null,
         radius: 15
     });
 }
@@ -158,11 +154,7 @@ function initTimescaleControl() {
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
             
-            reviewHeatmap.setData(new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
-                var ltlg = d.key.split(' ');
-                var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
-                return {location: latlng, weight: d.value};
-            })));
+            updateReviewHeatmap();
         });
         
     timescaleController.append("g")
@@ -194,19 +186,90 @@ function initTimescaleControl() {
 }
 
 function initControlButtons() {
-    secondaryControlDisplay.append("button")
+    var reviewDiv = secondaryControlDisplay.append("div")
+    .style({
+        "text-align": "center",
+        position: "absolute",
+        left: "0px",
+        top: "0px",
+        width: "50%",
+        height: "100%"
+    });
+    
+    var businessDiv = secondaryControlDisplay.append("div")
+    .style({
+        "text-align": "center",
+        position: "absolute",
+        left: "50%",
+        top: "0px",
+        width: "50%",
+        height: "100%"
+    });
+    
+    
+    
+    reviewDiv.append("button")
         .attr({
-            class: "button",
+            width: "100%",
             onclick: "toggleReviewHeatmap()"
         })
+        .style({
+            width: "100%"
+        })
         .text("Toggle Review Heatmap");
-
-    secondaryControlDisplay.append("button")
+    
+    businessDiv.append("button")
         .attr({
-            class: "button",
             onclick: "toggleBusinessHeatmap()"
         })
+        .style({
+            width: "100%"
+        })
         .text("Toggle Business Heatmap");
+    
+    businessDiv.append("br");
+    
+    businessDiv.append("text")
+        .text("Weight by");
+
+    businessDiv.append("br");
+    
+    businessDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "businessWeighting",
+            value: "None",
+            onclick: "setBusinessNoWeighting()"
+        });
+        
+    businessDiv.append("text")
+        .text("None");
+        
+    businessDiv.append("br");
+
+    businessDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "businessWeighting",
+            value: "Stars",
+            onclick: "setBusinessStarWeighting()"
+        });
+    
+    businessDiv.append("text")
+        .text("Stars");
+    
+    businessDiv.append("br");
+    
+    businessDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "businessWeighting",
+            value: "Reviews",
+            onclick: "setBusinessReviewCountWeighting()"
+        });
+        
+    businessDiv.append("text")
+        .text("Reviews");
 }
 
 // Find the index of the element in array of which the attr equal value
@@ -228,10 +291,64 @@ function getIndex(array, attr, value) {
     return null;
 }
 
+function updateReviewHeatmap() {
+    reviewHeatmap.setData(new google.maps.MVCArray(reviewLocations.all().map(function(d, i) {
+        var ltlg = d.key.split(' ');
+        var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
+        return {location: latlng, weight: d.value};
+    })));
+}
+
 function toggleReviewHeatmap() {
     reviewHeatmap.setMap(reviewHeatmap.getMap() ? null : map);
 }
 
+function updateBusinessHeatmap() {
+    businessHeatmap.setData(new google.maps.MVCArray(businessLocations.all().map(function(d, i) {
+        var ltlg = d.key.split(' ');
+        var latlng = new google.maps.LatLng(ltlg[0], ltlg[1]);
+        return {location: latlng, weight: d.value};
+    })));
+}
+
 function toggleBusinessHeatmap() {
     businessHeatmap.setMap(businessHeatmap.getMap() ? null : map);
+}
+
+function setBusinessNoWeighting() {
+    businessLocations.reduce(reduceAdd, reduceRemove, reduceInitial);
+    updateBusinessHeatmap();
+}
+
+function setBusinessStarWeighting() {
+    businessLocations.reduce(reduceAddSum("stars"), reduceRemoveSum("stars"), reduceInitial);
+    updateBusinessHeatmap();
+}
+
+function setBusinessReviewCountWeighting() {
+    businessLocations.reduce(reduceAddSum("review_count"), reduceRemoveSum("review_count"), reduceInitial);
+    updateBusinessHeatmap();
+}
+
+function reduceAdd(p, v) {
+    return p + 1;
+}
+
+function reduceRemove(p, v) {
+    return p - 1;
+}
+
+function reduceAddSum(attr) {
+  return function(p,v) {
+    return p + v[attr];
+  };
+}
+function reduceRemoveSum(attr) {
+  return function(p,v) {
+    return p - v[attr];
+  };
+}
+
+function reduceInitial() {
+    return 0;
 }
