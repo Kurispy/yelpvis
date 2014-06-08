@@ -66,7 +66,7 @@ d3.json("data/business.json", function(data) {
         processData();
 });
 
-d3.json("data/review_notext.json", function(data) {
+d3.json("data/review.json", function(error, data) {
     reviewData = data;
     if(!--remaining)
         processData();
