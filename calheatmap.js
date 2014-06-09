@@ -16,7 +16,7 @@ $.getJSON("data/checkin.json", function(json){
         range: 7,
         considerMissingDataAsZero: true,
         verticalOrientation: true,
-        displayLegend: true,
+        displayLegend: false,
         label: {
             position: "left",
             offset: {
@@ -26,7 +26,7 @@ $.getJSON("data/checkin.json", function(json){
             width: 110
         },
         legend: [1, 2, 3, 4, 5, 10],
-        legendColors: ["#ffffff", "#232181"]
+        legendColors: ["#ffffff", "steelblue"]
     });
 
     $("#business-name").on("click", function(){

@@ -164,10 +164,19 @@ function setListener(object, d) {
 
 function initTimescaleControl() {
     var reviewsPerDate = reviewDates.all();
-    var height = 234, width = 130;
+    controlDisplay.append("text")
+        .attr({
+            class: "infoHeader",
+            x: 130,
+            y: 20,
+            "text-anchor": "middle"
+        })
+        .text("Overview");
+    
+    var height = 214, width = 130;
 
     var timescaleController = controlDisplay.append("g")
-        .attr("transform", "translate(26, 13)");
+        .attr("transform", "translate(26, 23)");
 
     var xScale = d3.scale.linear()
         .domain([0, d3.max(reviewsPerDate, function(d) { return d.value; })])
@@ -251,6 +260,15 @@ function initControlButtons() {
             width: "100%"
         })
         .text("Toggle Review Heatmap");
+
+    reviewDiv.append("button")
+        .attr({
+            onclick: "changeReviewGradient()"
+        })
+        .style({
+            width: "100%"
+        })
+        .text("Change Colors");
 
     reviewDiv.append("br");
     
@@ -337,6 +355,15 @@ function initControlButtons() {
             width: "100%"
         })
         .text("Toggle Business Heatmap");
+
+    businessDiv.append("button")
+        .attr({
+            onclick: "changeBusinessGradient()"
+        })
+        .style({
+            width: "100%"
+        })
+        .text("Change Colors");
     
     businessDiv.append("br");
     
@@ -488,6 +515,16 @@ function toggleReviewHeatmap() {
     reviewHeatmap.setMap(reviewHeatmap.getMap() ? null : map);
 }
 
+function changeReviewGradient() {
+  var gradient = [
+    'rgba(0, 0, 0, 0)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 255, 255, 1)',
+    'rgba(0, 255, 0, 1)'
+  ];
+  reviewHeatmap.set('gradient', reviewHeatmap.get('gradient') ? null : gradient);
+}
+
 function updateBusinessHeatmap() {
     businessHeatmap.setData(new google.maps.MVCArray(businessLocations.all().map(function(d, i) {
         var ltlg = d.key.split(' ');
@@ -498,6 +535,16 @@ function updateBusinessHeatmap() {
 
 function toggleBusinessHeatmap() {
     businessHeatmap.setMap(businessHeatmap.getMap() ? null : map);
+}
+
+function changeBusinessGradient() {
+  var gradient = [
+    'rgba(0, 0, 0, 0)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 255, 255, 1)',
+    'rgba(0, 255, 0, 1)'
+  ];
+  businessHeatmap.set('gradient', businessHeatmap.get('gradient') ? null : gradient);
 }
 
 function setBusinessNoWeighting() {
