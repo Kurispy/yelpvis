@@ -1,6 +1,6 @@
 var businessData, reviewData, remaining = 2;
 var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
-var business, businessByLocation, businessLocations;
+var business, businessByLocation, businessLocations, businessByReviewAmount, businessReviewAmounts;
 var map, reviewHeatmap, businessHeatmap;
 
 var mapDisplay = d3.select("body").append("div")
@@ -46,7 +46,7 @@ var secondaryControlDisplay = d3.select("body").append("div")
         "border-left": "2px solid black"
     });
     
-var detailViewDisplay = d3.select("body").append("div")
+var reviewDetailDisplay = d3.select("body").append("div")
     .attr("class", "displayDiv")
     .style({
         position: "absolute",
@@ -64,7 +64,7 @@ var detailViewDisplay = d3.select("body").append("div")
         viewBox: "0 0 480 195"
     });
     
-var calHeatMapDisplay = d3.select("body").append("div")
+var businessDetailDisplay = d3.select("body").append("div")
     .attr("class", "displayDiv")
     .style({
         position:"absolute",
@@ -75,15 +75,14 @@ var calHeatMapDisplay = d3.select("body").append("div")
         "text-align": "center",
         "border-top": "2px solid black",
         "border-left": "2px solid black"
-    });
-    
-var calHeatMap = calHeatMapDisplay.append("div")
+    })
+    .append("svg")
     .attr({
-        id: "cal-heatmap"
+        class: "display",
+        width: "100%",
+        height: "100%",
+        viewBox: "0 0 480 195"
     });
-
-var button = calHeatMap.append("button")
-    .attr("id", "business-name");
 
 d3.json("data/business.json", function(data) {
     businessData = data;
@@ -116,17 +115,23 @@ function processData() {
         return d.latitude + ' ' + d.longitude;
     });
     businessLocations = businessByLocation.group();
+    businessByReviewAmount = business.dimension(function(d) {
+        return d.review_count;
+    });
+    businessReviewAmounts = businessByReviewAmount.group();
     
     initMapDisplay();
-    initTimescaleControl();
+    initReviewTimescaleControl();
+    initBusinessControl();
     initControlButtons();
-    updateDetailViewDisplay(null);
+    updateReviewDetailDisplay(null);
+    updateBusinessDetailDisplay(null);
 }
 
 function initMapDisplay() {
     var mapOptions = {
-      center: new google.maps.LatLng(33.451162, -112.061603),
-      zoom: 10
+        center: new google.maps.LatLng(33.451162, -112.061603),
+        zoom: 10
     };
     map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
@@ -162,21 +167,21 @@ function setListener(object, d) {
     });
 }
 
-function initTimescaleControl() {
+function initReviewTimescaleControl() {
     var reviewsPerDate = reviewDates.all();
     controlDisplay.append("text")
         .attr({
             class: "infoHeader",
-            x: 130,
-            y: 20,
+            x: 73,
+            y: 15,
             "text-anchor": "middle"
         })
-        .text("Overview");
+        .text("Reviews");
     
-    var height = 214, width = 130;
+    var height = 214, width = 104;
 
     var timescaleController = controlDisplay.append("g")
-        .attr("transform", "translate(26, 23)");
+        .attr("transform", "translate(21, 23)");
 
     var xScale = d3.scale.linear()
         .domain([0, d3.max(reviewsPerDate, function(d) { return d.value; })])
@@ -197,7 +202,7 @@ function initTimescaleControl() {
         .on("brush", function() {
             reviewByDate.filterRange(brush.extent());
             
-            updateDetailViewDisplay(brush.extent());
+            updateReviewDetailDisplay(brush.extent());
             updateReviewHeatmap();
             
         });
@@ -219,6 +224,74 @@ function initTimescaleControl() {
         .attr("height", (height / reviewsPerDate.length) - (.01 * height / reviewsPerDate.length))
         .attr("y", function(d, i) {
             return (height / reviewsPerDate.length) * i;
+        })
+        .attr("fill", "steelblue");
+
+    var gBrush = timescaleController.append("g")
+        .attr("class", "brush")
+        .call(brush);
+
+    gBrush.selectAll("rect")
+        .attr("width", width);
+}
+
+function initBusinessControl() {
+    var businessesPerReviewAmount = businessReviewAmounts.all();
+    
+    controlDisplay.append("text")
+        .attr({
+            class: "infoHeader",
+            x: 203,
+            y: 15,
+            "text-anchor": "middle"
+        })
+        .text("Businesses");
+    
+    var height = 214, width = 104;
+
+    var timescaleController = controlDisplay.append("g")
+        .attr("transform", "translate(151, 23)");
+
+    var xScale = d3.scale.linear()
+        .domain([0, d3.max(businessesPerReviewAmount, function(d) { return d.value; })])
+        .range([0, width]);
+
+    var yScale = d3.scale.linear()
+        .domain([0, d3.max(businessesPerReviewAmount, function(d) { return d.key; })])
+        .range([0, height]);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickSize(0);
+
+    var brush = d3.svg.brush()
+        .y(yScale)
+        .on("brush", function() {
+            businessByReviewAmount.filterRange(brush.extent());
+            
+            updateBusinessDetailDisplay(brush.extent());
+            updateBusinessHeatmap();
+            
+        });
+        
+    timescaleController.append("g")
+        .attr("class", "timeAxis")
+        .call(yAxis);
+
+    timescaleController.selectAll("rect")
+        .data(businessesPerReviewAmount)
+        .enter()
+        .append("rect")
+        .attr("id", function(d, i) {
+            return i + 1;
+        })
+        .attr("width", function(d) {
+            return xScale(d.value);
+        })
+        .attr("height", (height / businessesPerReviewAmount.length) - (.01 * height / businessesPerReviewAmount.length))
+        .attr("y", function(d, i) {
+            return (height / businessesPerReviewAmount.length) * i;
         })
         .attr("fill", "steelblue");
 
@@ -410,7 +483,7 @@ function initControlButtons() {
         .text("Reviews");
 }
 
-function updateDetailViewDisplay(extent) {
+function updateReviewDetailDisplay(extent) {
     var reviewsPerDate;
     if(extent === null)
         reviewsPerDate = reviewDates.all();
@@ -420,7 +493,7 @@ function updateDetailViewDisplay(extent) {
         });
     }
     
-    detailViewDisplay.selectAll("*").remove();
+    reviewDetailDisplay.selectAll("*").remove();
     
     // Scales
     var xScale = d3.time.scale()
@@ -444,7 +517,7 @@ function updateDetailViewDisplay(extent) {
         .tickSize(1)
         .ticks(5);
 
-    detailViewDisplay.append("text")
+    reviewDetailDisplay.append("text")
         .attr({
             class: "infoHeader",
             x: 240,
@@ -453,17 +526,17 @@ function updateDetailViewDisplay(extent) {
         })
         .text("Reviews Per Day");
 
-    detailViewDisplay.append("g")
+    reviewDetailDisplay.append("g")
         .attr("transform", "translate(49, 170)")
         .attr("class", "axis")
         .call(xAxis);
 
-    detailViewDisplay.append("g")
+    reviewDetailDisplay.append("g")
         .attr("transform", "translate(49, 50)")
         .attr("class", "axis")
         .call(yAxis);
 
-    var bars = detailViewDisplay.append("g")
+    var bars = reviewDetailDisplay.append("g")
             .attr("transform", "translate(50, 50)");
 
     // Enter
@@ -478,6 +551,79 @@ function updateDetailViewDisplay(extent) {
             return yScale(d.value);
         })
         .attr("width", (400 / reviewsPerDate.length))
+        .attr("height", function(d) {
+            return 120 - yScale(d.value);
+        })
+        .attr("fill", "steelblue");
+}
+
+function updateBusinessDetailDisplay(extent) {
+    var businessesPerReviewAmount;
+    if(extent === null)
+        businessesPerReviewAmount = businessReviewAmounts.all();
+    else {
+        businessesPerReviewAmount = businessReviewAmounts.all().filter(function(d, i) {
+            return d.key >= extent[0] && d.key <= extent[1];
+        });
+    }
+    
+    businessDetailDisplay.selectAll("*").remove();
+    
+    // Scales
+    var xScale = d3.scale.linear()
+        .domain([0, d3.max(businessesPerReviewAmount, function(d) { return d.key; })])
+        .range([0, 400]);
+
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom")
+        .tickSize(1)
+        .ticks(5);
+    
+    var yScale = d3.scale.linear()
+        .domain([0, d3.max(businessesPerReviewAmount, function(d) { return d.value; })])
+        .range([120, 0]);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickSize(1)
+        .ticks(5);
+
+    businessDetailDisplay.append("text")
+        .attr({
+            class: "infoHeader",
+            x: 240,
+            y: 25,
+            "text-anchor": "middle"
+        })
+        .text("Business Per Review Count");
+
+    businessDetailDisplay.append("g")
+        .attr("transform", "translate(49, 170)")
+        .attr("class", "axis")
+        .call(xAxis);
+
+    businessDetailDisplay.append("g")
+        .attr("transform", "translate(49, 50)")
+        .attr("class", "axis")
+        .call(yAxis);
+
+    var bars = businessDetailDisplay.append("g")
+            .attr("transform", "translate(50, 50)");
+
+    // Enter
+    bars.selectAll("rect")
+        .data(businessesPerReviewAmount)
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i) {
+            return i * (400 / businessesPerReviewAmount.length);
+        })
+        .attr("y", function(d) {
+            return yScale(d.value);
+        })
+        .attr("width", (400 / businessesPerReviewAmount.length))
         .attr("height", function(d) {
             return 120 - yScale(d.value);
         })
