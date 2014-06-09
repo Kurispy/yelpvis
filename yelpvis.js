@@ -2,6 +2,8 @@ var businessData, reviewData, remaining = 2;
 var review, reviews, reviewByDate, reviewDates, reviewByLocation, reviewLocations;
 var business, businessByLocation, businessLocations;
 var map, reviewHeatmap, businessHeatmap;
+var click = 0;
+var markers = [];
 
 var mapDisplay = d3.select("body").append("div")
     .attr({
@@ -83,7 +85,9 @@ var calHeatMap = calHeatMapDisplay.append("div")
     });
 
 var button = calHeatMap.append("button")
-    .attr("id", "business-name");
+    .attr("id", "business-name")
+    .attr("class", "infoHeader");
+    
 
 d3.json("data/business.json", function(data) {
     businessData = data;
@@ -501,18 +505,144 @@ function toggleBusinessHeatmap() {
 }
 
 function setBusinessNoWeighting() {
+    if(markers.length != 0) {
+        markers[0].setMap(null);
+        markers = [];
+    }
     businessLocations.reduce(reduceAdd, reduceRemove, reduceInitial);
     updateBusinessHeatmap();
+    document.getElementById("cal-heatmap").style.display = 'none';
 }
 
 function setBusinessStarWeighting() {
+    if(markers.length != 0) {
+        markers[0].setMap(null);
+        markers = [];
+    }
     businessLocations.reduce(reduceAddSum("stars"), reduceRemoveSum("stars"), reduceInitial);
+    click = 0;
     updateBusinessHeatmap();
+    document.getElementById("cal-heatmap").style.display = 'block';
+    document.getElementById("business-name").innerHTML = "Bertha's Cafe";
+    cal.update({"1401609600": 4,"1401958800": 5,"1401804000": 5,"1401778800": 1,"1401962400": 5,
+        "1402124400": 1,"1401980400": 1,"1401606000": 2,"1401886800": 4,"1401861600": 1,"1401800400": 7,
+        "1401692400": 3,"1402045200": 29,"1402138800": 2,"1401883200": 22,"1401717600": 1,"1401696000": 5,
+        "1401973200": 7,"1402149600": 2,"1401904800": 1,"1401714000": 9,"1401894000": 1,"1402041600": 5,
+        "1401645600": 1,"1401613200": 4,"1401616800": 5,"1402128000": 3,"1401811200": 1,"1401796800": 11,
+        "1401710400": 11,"1401652800": 1,"1401793200": 10,"1402034400": 1,"1401876000": 8,"1401789600": 5,
+        "1401879600": 9,"1401706800": 14,"1401699600": 4,"1401890400": 1,"1402056000": 21,"1401688800": 2,
+        "1401948000": 2,"1401786000": 4,"1401955200": 1,"1402038000": 3,"1401976800": 4,"1402052400": 20,
+        "1401627600": 4,"1401872400": 5,"1401969600": 19,"1402117200": 1,"1401624000": 13,"1401868800": 2,
+        "1401782400": 9,"1401721200": 3,"1402059600": 24,"1401966000": 16,"1402167600": 1,"1402063200": 2,
+        "1401620400": 8,"1401631200": 1,"1401703200": 5,"1402048800": 34});
+    var contentString = '<div id="content"><div id="businessName" class="markerText">Business Name: Bertha\'s Cafe</div>' +
+            '<div id="numReviews" class="markerText">Reviews: 177</div>' +
+            '<div id="numStars" class="markerText">Stars: 4.5</div>' +
+            '<div id="category" class="markerText">Categories: Bakeries, Food, Breakfast & Brunch, Sandwiches, Restaurants</div>' + '</div>';
+    var infowindow = new google.maps.InfoWindow({
+        content: contentString
+    });
+    var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(33.4952159,-112.014454),
+        map: map,
+        title: "Bertha's Cafe"
+    });
+    google.maps.event.addListener(marker, 'click', function(){
+        map.setCenter(marker.getPosition());
+        infowindow.open(map,marker);
+    });
+    map.setCenter(marker.getPosition());
+    infowindow.open(map,marker);
+    markers.push(marker);
+    click++;
 }
 
+$("#business-name").on("click", function(){
+    if(document.getElementById("business-name").innerHTML != "Pizzeria Bianco") {
+        $.getJSON("data/popular_star.json", function(json){
+            document.getElementById("business-name").innerHTML = json[click]["name"];
+            cal.update(json[click]["checkin_time"]);
+            if(markers.length != 0) {
+                markers[0].setMap(null);
+                markers = [];
+            }
+
+            var contentString = '<div id="content"><div id="businessName" class="markerText">Business Name: ' + json[click]["name"] + '</div>' +
+            '<div id="numReviews" class="markerText">Reviews: ' + json[click]["review_count"] + '</div>' +
+            '<div id="numStars" class="markerText">Stars: ' + json[click]["stars"] + '</div>' +
+            '<div id="category" class="markerText">Categories: ' + json[click]["categories"] + '</div>' + '</div>';
+
+            var infowindow = new google.maps.InfoWindow({
+                content: contentString
+            });
+
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(json[click]["latitude"],json[click]["longitude"]),
+                map: map,
+                title: json[click]["name"]
+            });
+            google.maps.event.addListener(marker, 'click', function(){
+                map.setCenter(marker.getPosition());
+                infowindow.open(map,marker);
+            });
+            map.setCenter(marker.getPosition());
+            infowindow.open(map,marker);
+            markers.push(marker);
+
+            // update iterator
+            click+=1;
+            if(click == 74)
+                click = 0;
+        });
+    }
+});
+
 function setBusinessReviewCountWeighting() {
+    if(markers.length != 0){
+        markers[0].setMap(null);
+        markers = [];
+    }
     businessLocations.reduce(reduceAddSum("review_count"), reduceRemoveSum("review_count"), reduceInitial);
     updateBusinessHeatmap();
+    document.getElementById("cal-heatmap").style.display = 'block';
+    document.getElementById("business-name").innerHTML = "Pizzeria Bianco";
+    cal.update({"1401984000": 19,"1401638400": 9,"1401642000": 10,"1402092000": 4,"1401876000": 10,
+        "1402081200": 29,"1401886800": 10,"1401818400": 34,"1401879600": 13,"1402002000": 17,
+        "1401652800": 4,"1402063200": 26,"1402048800": 15,"1401656400": 3,"1401980400": 18,
+        "1401660000": 1,"1402120800": 1,"1401814800": 17,"1402095600": 1,"1401706800": 19,
+        "1401894000": 12,"1401890400": 11,"1401822000": 29,"1401897600": 19,"1401912000": 18,
+        "1402005600": 6,"1401901200": 25,"1401904800": 27,"1402066800": 25,"1401732000": 23,
+        "1401915600": 6,"1402167600": 1,"1401908400": 38,"1401796800": 16,"1401703200": 5,
+        "1401962400": 6,"1401800400": 13,"1402077600": 25,"1401710400": 17,"1401919200": 5,
+        "1401742800": 4,"1401620400": 13,"1401872400": 1,"1401804000": 9,"1401807600": 7,
+        "1401735600": 14,"1401987600": 15,"1401811200": 12,"1402070400": 34,"1401699600": 3,
+        "1401645600": 13,"1402056000": 26,"1401829200": 19,"1401994800": 21,"1402052400": 21,
+        "1401825600": 17,"1401631200": 11,"1401739200": 20,"1401991200": 28,"1402059600": 28,
+        "1402038000": 1,"1401717600": 7,"1401728400": 14,"1401969600": 28,"1401649200": 17,
+        "1401721200": 13,"1401832800": 1,"1402084800": 23,"1401724800": 17,"1401883200": 16,
+        "1402074000": 33,"1401616800": 5,"1401750000": 1,"1401966000": 17,"1401973200": 13,
+        "1401624000": 11,"1401789600": 2,"1402088400": 16,"1401627600": 8,"1402135200": 1,
+        "1402171200": 2,"1401976800": 12,"1401714000": 5,"1401746400": 1,"1401998400": 29,
+        "1401634800": 7,"1401793200": 18,"1402045200": 1});
+    var contentString = '<div id="content"><div id="businessName" class="markerText">Business Name: Pizzeria Bianco</div>' +
+            '<div id="numReviews" class="markerText">Reviews: 1124</div>' +
+            '<div id="numStars" class="markerText">Stars: 4</div>' +
+            '<div id="category" class="markerText">Categories: Italian, Pizza, Sandwiches, Restaurants</div>' + '</div>';
+    var infowindow = new google.maps.InfoWindow({
+        content: contentString
+    });
+    var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(33.449233,-112.065458),
+        map: map,
+        title: 'Pizzeria Bianco'
+    });
+    google.maps.event.addListener(marker, 'click', function(){
+        map.setCenter(marker.getPosition());
+        infowindow.open(map,marker);
+    });
+    map.setCenter(marker.getPosition());
+    infowindow.open(map,marker);
+    markers.push(marker);
 }
 
 function setReviewNoWeighting() {

@@ -1,9 +1,6 @@
-var click = 0;
 var cal = new CalHeatMap();
 
-// change click to get business id
 $.getJSON("data/checkin.json", function(json){
-    document.getElementById("business-name").innerHTML = json[click]["business_id"];
     cal.init({
         itemSelector: "#cal-heatmap",
         domain: "day",
@@ -16,7 +13,7 @@ $.getJSON("data/checkin.json", function(json){
         range: 7,
         considerMissingDataAsZero: true,
         verticalOrientation: true,
-        displayLegend: true,
+        displayLegend: false,
         label: {
             position: "left",
             offset: {
@@ -28,12 +25,6 @@ $.getJSON("data/checkin.json", function(json){
         legend: [1, 2, 3, 4, 5, 10],
         legendColors: ["#ffffff", "#232181"]
     });
-
-    $("#business-name").on("click", function(){
-        click+=1;
-        document.getElementById("business-name").innerHTML = json[click]["business_id"];
-        cal.update(json[click]["checkin_time"]);
-    });
     
     document.getElementById("weekday0").innerHTML = "Sunday";
     document.getElementById("weekday1").innerHTML = "Monday";
@@ -41,5 +32,6 @@ $.getJSON("data/checkin.json", function(json){
     document.getElementById("weekday3").innerHTML = "Wednesday";
     document.getElementById("weekday4").innerHTML = "Thursday";
     document.getElementById("weekday5").innerHTML = "Friday";
-    document.getElementById("weekday6").innerHTML = "Saturday"; 
+    document.getElementById("weekday6").innerHTML = "Saturday";
+    document.getElementById("cal-heatmap").style.display = 'none';
 });

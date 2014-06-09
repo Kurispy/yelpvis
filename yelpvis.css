@@ -67,3 +67,7 @@ body {
     stroke: #fff;
     fill-opacity: .125;
 }
+
+ .markerText {
+    font-size: 10pt;
+ }
