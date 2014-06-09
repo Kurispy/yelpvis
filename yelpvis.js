@@ -242,8 +242,6 @@ function initControlButtons() {
         height: "100%"
     });
     
-    
-    
     reviewDiv.append("button")
         .attr({
             width: "100%",
@@ -253,6 +251,83 @@ function initControlButtons() {
             width: "100%"
         })
         .text("Toggle Review Heatmap");
+
+    reviewDiv.append("br");
+    
+    reviewDiv.append("text")
+        .text("Weight by");
+
+    reviewDiv.append("br");
+    
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "None",
+            onclick: "setReviewNoWeighting()"
+        });
+        
+    reviewDiv.append("text")
+        .text("None");
+        
+    reviewDiv.append("br");
+
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "Good",
+            onclick: "setReviewGoodWeighting()"
+        });
+    
+    reviewDiv.append("text")
+        .text("Good");
+
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "Surprise",
+            onclick: "setReviewSurpriseWeighting()"
+        });
+    
+    reviewDiv.append("text")
+        .text("Surprise");
+
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "Hyped",
+            onclick: "setReviewHypedWeighting()"
+        });
+    
+    reviewDiv.append("text")
+        .text("Hyped");
+
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "Bad",
+            onclick: "setReviewBadWeighting()"
+        });
+    
+    reviewDiv.append("text")
+        .text("Bad");
+    
+    reviewDiv.append("br");
+    
+    reviewDiv.append("input")
+        .attr({
+            type: "radio",
+            name: "reviewWeighting",
+            value: "Fans",
+            onclick: "setReviewFansWeighting()"
+        });
+        
+    reviewDiv.append("text")
+        .text("Fans");
     
     businessDiv.append("button")
         .attr({
@@ -440,6 +515,36 @@ function setBusinessReviewCountWeighting() {
     updateBusinessHeatmap();
 }
 
+function setReviewNoWeighting() {
+    reviewLocations.reduce(reduceAdd, reduceRemove, reduceInitial);
+    updateReviewHeatmap();
+}
+
+function setReviewGoodWeighting() {
+    reviewLocations.reduce(reduceAddText(0), reduceRemoveText(0), reduceInitial);
+    updateReviewHeatmap();
+}
+
+function setReviewSurpriseWeighting() {
+    reviewLocations.reduce(reduceAddText(1), reduceRemoveText(1), reduceInitial);
+    updateReviewHeatmap();
+}
+
+function setReviewHypedWeighting() {
+    reviewLocations.reduce(reduceAddText(2), reduceRemoveText(2), reduceInitial);
+    updateReviewHeatmap();
+}
+
+function setReviewBadWeighting() {
+    reviewLocations.reduce(reduceAddText(3), reduceRemoveText(3), reduceInitial);
+    updateReviewHeatmap();
+}
+
+function setReviewFansWeighting() {
+    reviewLocations.reduce(reduceAddSum("f"), reduceRemoveSum("f"), reduceInitial);
+    updateReviewHeatmap();
+}
+
 function reduceAdd(p, v) {
     return p + 1;
 }
@@ -449,14 +554,48 @@ function reduceRemove(p, v) {
 }
 
 function reduceAddSum(attr) {
-  return function(p,v) {
-    return p + v[attr];
-  };
+    return function(p,v) {
+        return p + v[attr];
+    };
 }
 function reduceRemoveSum(attr) {
+    return function(p,v) {
+        return p - v[attr];
+    };
+}
+
+function reduceAddDeviation(attr) {
+    return function(p,v) {
+        return p + (2.5 - Math.abs((2.5 - v[attr])));
+    };
+}
+
+function reduceRemoveDeviation(attr) {
+    return function(p,v) {
+        return p - (2.5 - Math.abs((2.5 - v[attr])));
+    };
+}
+
+function reduceAddText(attr) {
+    return function(p,v) {
+        if(v.text === "")
+            return p;
+        else {
+            var words = v.text.split(" ");
+            return p + (+words[attr]);
+        }
+    };
+}
+
+function reduceRemoveText(attr) {
   return function(p,v) {
-    return p - v[attr];
-  };
+        if(v.text === "")
+            return p;
+        else {
+            var words = v.text.split(" ");
+            return p - (+words[attr]);
+        }
+    };
 }
 
 function reduceInitial() {
