@@ -597,7 +597,7 @@ function updateBusinessDetailDisplay(extent) {
             y: 25,
             "text-anchor": "middle"
         })
-        .text("Business Per Review Count");
+        .text("Businesses Per Review Count");
 
     businessDetailDisplay.append("g")
         .attr("transform", "translate(49, 170)")
